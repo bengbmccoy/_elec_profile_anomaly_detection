@@ -10,7 +10,7 @@ Algorithm:
 - P(x;mew,sigma^2) = 1/(((2*pi)^0.5)*sigma)*exp(-(((x-mew)^2)/(2*sigma^2)))
 
 Finally I will use the cross validation dataset to determine a value for epsillon that is the cutoff between regular and anomalous operation.
-if P(x) > epsilon, then register an anomaly, epsilon will be determiend using the cross validation dataset.
+- if P(x) > epsilon, then register an anomaly, epsilon will be determiend using the cross validation dataset.
 
 The feature vector table will look like the below:
 
