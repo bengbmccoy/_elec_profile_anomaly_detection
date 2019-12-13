@@ -60,15 +60,24 @@ def main():
 def gen_new_data(data_type, gen_data, val_dict, avg_val_dict, sd_val_dict, days_to_gen):
     # creates new data based on the avg and std dev of a time period.
     # appends new data to a CSV and saves it
-    for i in range(days_to_gen):
-        new_data = {}
-        for key, value in val_dict.items():
-            new_data[key] = float(avg_val_dict[key]) + (float(sd_val_dict[key]) * random.uniform(-1,1))
-            if data_type == 'outage' and random.randint(0,48) < 5:
-                new_data[key] = 0
+    # Random 0s are added by generating a randint between 0 and 10 and if the
+    # int is below 2, then a 0 is added to that value.
+    if data_type == 'outage':
+        for i in range(days_to_gen):
+            new_data = {}
+            for key, value in val_dict.items():
+                if random.randint(0,10) < 2:
+                    new_data[key] = 0
+                else:
+                    new_data[key] = float(avg_val_dict[key]) + (float(sd_val_dict[key]) * random.uniform(-1,1))
+            gen_data = gen_data.append(new_data, ignore_index=True)
 
-        # print(new_data)
-        gen_data = gen_data.append(new_data, ignore_index=True)
+    if data_type == 'clean':
+        for i in range(days_to_gen):
+            new_data = {}
+            for key, value in val_dict.items():
+                new_data[key] = float(avg_val_dict[key]) + (float(sd_val_dict[key]) * random.uniform(-1,1))
+            gen_data = gen_data.append(new_data, ignore_index=True)
 
     if data_type == 'clean':
         gen_data['class'] = 0
