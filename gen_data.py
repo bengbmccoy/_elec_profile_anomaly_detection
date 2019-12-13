@@ -4,16 +4,40 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import random
 import statistics
+import argparse
 
 def main():
 
-    test_data = open_csv('20191201_OpenNEM.csv')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('example_data', type=str,
+                        help='example data filepath')
+    # parser.add_argument('y_column', type=str,
+    #                     help='the column title of the outputs column')
+    # parser.add_argument('X_columns', nargs='+',
+    #                     help='the columns to be included as features in X matrix')
+    # parser.add_argument('-scaling', type=str, default='standardization',
+    #                     help='sclaing options are: min-max, mean-norm, standardization (default)')
+    parser.add_argument('-days_gen', nargs='?', type=int, default=500,
+                        help='the number of days of data to generate, default is 500')
+    # parser.add_argument('-alpha', nargs='?', type=float, default=0.01,
+    #                     help='the chosen learning rate, default is 0.01')
+    parser.add_argument('-new_filename', type=str,
+                        help='the generated data filepath')
+    # parser.add_argument('-pr', '--print',
+    #                     help='prints the cost function after erach iteration',
+    #                     action='store_true')
+    parser.add_argument('-p', '--plot',
+                        help='plots the cost function over time',
+                        action='store_true')
+    args = parser.parse_args()
+
+    test_data = open_csv(args.example_data)
     # print(test_data)
 
     test_data['Total - MW'] = test_data.sum(axis=1)
     test_day = test_data.head(48)
     totals_list = test_day['Total - MW'].tolist()
-    days_to_gen = 500
+    days_to_gen = args.days_gen
 
     # get a dictionary of empty lists, the key of each list is a time period
     sd_dict = {}
@@ -58,13 +82,14 @@ def main():
 
     # Add class columns of 0s
     gen_data['class'] = 0
-    # print(gen_data)
+    print(gen_data)
 
     # Save CSV
-    save_csv(gen_data, 'new_data.csv')
+    save_csv(gen_data, args.new_filename)
 
-    # gen_data.T.plot()
-    # plt.show()
+    if args.plot:
+        gen_data.T.plot()
+        plt.show()
 
 def save_csv(df, file_name):
     df.to_csv(file_name)
