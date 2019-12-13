@@ -11,7 +11,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('example_data', type=str,
                         help='example data filepath')
-    parser.add_argument('--data_type', default='clean',
+    parser.add_argument('-data_type', default='clean',
                         nargs='?',
                         choices=['clean', 'outage'],
                         help='generate clean data or outage data')
@@ -32,6 +32,7 @@ def main():
 
     # parse number of days to generate
     days_to_gen = args.days_gen
+    data_type = args.data_type
 
     # Sum the data into a total column
     test_data['Total - MW'] = test_data.sum(axis=1)
@@ -43,6 +44,21 @@ def main():
 
     # create the new pandas whcih will comtain generated data
     gen_data = pd.DataFrame(columns=list(val_dict.keys()))
+
+    gen_data = gen_new_data(data_type, gen_data, val_dict, avg_val_dict, sd_val_dict, days_to_gen)
+
+
+    if args.print:
+        print(gen_data)
+
+    # Save CSV
+    save_csv(gen_data, args.new_filename)
+
+    if args.plot:
+        gen_data.T.plot()
+        plt.show()
+
+def gen_new_data(data_type, gen_data, val_dict, avg_val_dict, sd_val_dict, days_to_gen):
 
     # creates new data based on the avg and std dev of a time period.
     # appends new data to a CSV and saves it
@@ -56,15 +72,7 @@ def main():
 
     # Add class columns of 0s
     gen_data['class'] = 0
-    if args.print:
-        print(gen_data)
-
-    # Save CSV
-    save_csv(gen_data, args.new_filename)
-
-    if args.plot:
-        gen_data.T.plot()
-        plt.show()
+    return gen_data
 
 def get_sd_val_dict(sd_dict):
     # create a dict with key as times and val as Std Dev of total - MW
@@ -101,10 +109,8 @@ def save_csv(df, file_name):
     df.to_csv(file_name)
 
 def open_csv(file_name):
-    ''' opens the dataframe with the index columns as the first column and the
-    values parsed as dates
-    '''
-
+    # opens the dataframe with the index columns as the first column and the
+    # values parsed as dates
     return pd.read_csv(file_name, index_col=0, parse_dates=True)
 
 main()
