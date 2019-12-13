@@ -12,9 +12,7 @@ def main():
     parser.add_argument('example_data', type=str,
                         help='example data filepath')
     parser.add_argument('-data_type', default='clean',
-                        nargs='?',
-                        choices=['clean', 'outage'],
-                        help='generate clean data or outage data')
+                        help='generate "clean" data or "outage" data')
     parser.add_argument('-days_gen', nargs='?', type=int, default=500,
                         help='the number of days of data to generate, default is 500')
     parser.add_argument('-new_filename', type=str,
@@ -45,33 +43,37 @@ def main():
     # create the new pandas whcih will comtain generated data
     gen_data = pd.DataFrame(columns=list(val_dict.keys()))
 
+    # generate all of the new data
     gen_data = gen_new_data(data_type, gen_data, val_dict, avg_val_dict, sd_val_dict, days_to_gen)
 
 
     if args.print:
         print(gen_data)
 
-    # Save CSV
-    save_csv(gen_data, args.new_filename)
-
     if args.plot:
         gen_data.T.plot()
         plt.show()
 
-def gen_new_data(data_type, gen_data, val_dict, avg_val_dict, sd_val_dict, days_to_gen):
+    # Save CSV
+    save_csv(gen_data, args.new_filename)
 
+def gen_new_data(data_type, gen_data, val_dict, avg_val_dict, sd_val_dict, days_to_gen):
     # creates new data based on the avg and std dev of a time period.
     # appends new data to a CSV and saves it
     for i in range(days_to_gen):
         new_data = {}
         for key, value in val_dict.items():
             new_data[key] = float(avg_val_dict[key]) + (float(sd_val_dict[key]) * random.uniform(-1,1))
+            if data_type == 'outage' and random.randint(0,48) < 5:
+                new_data[key] = 0
+
         # print(new_data)
         gen_data = gen_data.append(new_data, ignore_index=True)
 
-
-    # Add class columns of 0s
-    gen_data['class'] = 0
+    if data_type == 'clean':
+        gen_data['class'] = 0
+    elif data_type == 'outage':
+        gen_data['class'] = 1
     return gen_data
 
 def get_sd_val_dict(sd_dict):
