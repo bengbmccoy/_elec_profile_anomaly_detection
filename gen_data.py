@@ -11,21 +11,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('example_data', type=str,
                         help='example data filepath')
-    # parser.add_argument('y_column', type=str,
-    #                     help='the column title of the outputs column')
-    # parser.add_argument('X_columns', nargs='+',
-    #                     help='the columns to be included as features in X matrix')
-    # parser.add_argument('-scaling', type=str, default='standardization',
-    #                     help='sclaing options are: min-max, mean-norm, standardization (default)')
     parser.add_argument('-days_gen', nargs='?', type=int, default=500,
                         help='the number of days of data to generate, default is 500')
-    # parser.add_argument('-alpha', nargs='?', type=float, default=0.01,
-    #                     help='the chosen learning rate, default is 0.01')
     parser.add_argument('-new_filename', type=str,
                         help='the generated data filepath')
-    # parser.add_argument('-pr', '--print',
-    #                     help='prints the cost function after erach iteration',
-    #                     action='store_true')
+    parser.add_argument('-pr', '--print',
+                        help='prints each new day of data',
+                        action='store_true')
     parser.add_argument('-p', '--plot',
                         help='plots the cost function over time',
                         action='store_true')
@@ -82,7 +74,8 @@ def main():
 
     # Add class columns of 0s
     gen_data['class'] = 0
-    print(gen_data)
+    if args.print:
+        print(gen_data)
 
     # Save CSV
     save_csv(gen_data, args.new_filename)
