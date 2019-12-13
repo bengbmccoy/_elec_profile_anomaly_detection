@@ -13,7 +13,7 @@ def main():
     test_data['Total - MW'] = test_data.sum(axis=1)
     test_day = test_data.head(48)
     totals_list = test_day['Total - MW'].tolist()
-    days_to_gen = 100
+    days_to_gen = 500
 
     # get a dictionary of empty lists, the key of each list is a time period
     sd_dict = {}
@@ -54,7 +54,14 @@ def main():
             new_data[key] = float(avg_val_dict[key]) + (float(sd_val_dict[key]) * random.uniform(-1,1))
         # print(new_data)
         gen_data = gen_data.append(new_data, ignore_index=True)
-    save_csv(gen_data, 'gen_data.csv')
+
+
+    # Add class columns of 0s
+    gen_data['class'] = 0
+    # print(gen_data)
+
+    # Save CSV
+    save_csv(gen_data, 'new_data.csv')
 
     # gen_data.T.plot()
     # plt.show()
