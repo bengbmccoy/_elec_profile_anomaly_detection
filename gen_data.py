@@ -66,14 +66,14 @@ def gen_new_data(data_type, gen_data, val_dict, avg_val_dict, sd_val_dict, days_
         for i in range(days_to_gen):
             new_data = {}
             for key, value in val_dict.items():
-                if random.randint(0,10) < 0:
+                if random.randint(0,10) < 1:
                     new_data[key] = 0
                 else:
                     new_data[key] = float(avg_val_dict[key]) + (float(sd_val_dict[key]) * random.uniform(-1,1))
             gen_data = gen_data.append(new_data, ignore_index=True)
         for i in range(len(gen_data)):
-            if 0 not in (gen_data.loc[0,:].values.tolist()):
-                print(gen_data.loc[0,:].values.tolist())
+            if 0 not in (gen_data.loc[i,:].values.tolist()):
+                gen_data.iloc[i,random.randint(0,len(gen_data.loc[i,:].values.tolist()))] = 0
 
     if data_type == 'clean':
         for i in range(days_to_gen):
@@ -84,7 +84,7 @@ def gen_new_data(data_type, gen_data, val_dict, avg_val_dict, sd_val_dict, days_
 
     if data_type == 'clean':
         gen_data['class'] = 0
-    elif data_type == 'outage':
+    else:
         gen_data['class'] = 1
     return gen_data
 
