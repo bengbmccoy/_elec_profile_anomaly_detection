@@ -37,7 +37,7 @@ def main():
 
     val_dict = get_empty_val_dict(test_data)
     val_dict = fill_val_dict(test_data, val_dict)
-    avg_val_dict = get_avg_val_divt(val_dict)
+    avg_val_dict = get_avg_val_dict(val_dict)
     sd_val_dict = get_sd_val_dict(val_dict)
 
     # create the new pandas whcih will comtain generated data
@@ -95,18 +95,18 @@ def get_sd_val_dict(sd_dict):
         sd_val_dict[key] = statistics.stdev(value)
     return sd_val_dict
 
-def get_avg_val_divt(sd_dict):
+def get_avg_val_dict(val_dict):
     # create a dict with key as times and val as mean of total - MW
     avg_val_dict = {}
-    for key, value in sd_dict.items():
+    for key, value in val_dict.items():
         avg_val_dict[key] = statistics.mean(value)
     return avg_val_dict
 
-def fill_val_dict(test_data, sd_dict):
+def fill_val_dict(test_data, val_dict):
     # appends total - MW values to the empty lists
     for index, row in test_data.iterrows():
-        sd_dict[str(index)[11:16]].append(row['Total - MW'])
-    return sd_dict
+        val_dict[str(index)[11:16]].append(row['Total - MW'])
+    return val_dict
 
 def get_empty_val_dict(test_data):
     # get a dictionary of empty lists, the key of each list is a time period
@@ -127,4 +127,5 @@ def open_csv(file_name):
     # values parsed as dates
     return pd.read_csv(file_name, index_col=0, parse_dates=True)
 
-main()
+if __name__ == "__main__":
+    main()
