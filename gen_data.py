@@ -40,12 +40,11 @@ def main():
     avg_val_dict = get_avg_val_dict(val_dict)
     sd_val_dict = get_sd_val_dict(val_dict)
 
-    # create the new pandas whcih will comtain generated data
-    gen_data = pd.DataFrame(columns=list(val_dict.keys()))
-
     # generate all of the new data
-    gen_data = gen_new_data(data_type, gen_data, val_dict, avg_val_dict, sd_val_dict, days_to_gen)
-
+    gen_data = gen_new_data(data_type, val_dict, avg_val_dict, sd_val_dict, days_to_gen)
+    print(0 in gen_data.loc[0].tolist()[:-1])
+    print(gen_data.loc[0].tolist()[:-1])
+    print('############')
 
     if args.print:
         print(gen_data)
@@ -57,23 +56,29 @@ def main():
     # Save CSV
     save_csv(gen_data, args.new_filename)
 
-def gen_new_data(data_type, gen_data, val_dict, avg_val_dict, sd_val_dict, days_to_gen):
-    # creates new data based on the avg and std dev of a time period.
-    # appends new data to a CSV and saves it
+def gen_new_data(data_type, val_dict, avg_val_dict, sd_val_dict, days_to_gen):
+    # creates new data based on the avg and std dev of a time period and then
+    # appends new data to a pandas dataframe
     # Random 0s are added by generating a randint between 0 and 10 and if the
     # int is below 2, then a 0 is added to that value.
+
+    # create the new pandas whcih will comtain generated data
+    gen_data = pd.DataFrame(columns=list(val_dict.keys()))
+
     if data_type == 'outage':
         for i in range(days_to_gen):
             new_data = {}
             for key, value in val_dict.items():
-                if random.randint(0,10) < 1:
+                if random.randint(0,10) < 2:
                     new_data[key] = 0
                 else:
                     new_data[key] = float(avg_val_dict[key]) + (float(sd_val_dict[key]) * random.uniform(-1,1))
             gen_data = gen_data.append(new_data, ignore_index=True)
+
         for i in range(len(gen_data)):
             if 0 not in (gen_data.loc[i,:].values.tolist()):
-                gen_data.iloc[i,random.randint(0,len(gen_data.loc[i,:].values.tolist()))] = 0
+                gen_data.iloc[i,random.randint(0,len(gen_data.loc[i,:].values.tolist())-1)] = 0
+
 
     if data_type == 'clean':
         for i in range(days_to_gen):
