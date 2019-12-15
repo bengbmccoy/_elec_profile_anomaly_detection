@@ -50,3 +50,13 @@ IMPROVEMENTS:
 - I need to clean up the code, add more functions and more comments.
 - I need to add command line variable for ease of use
 - I need to add some functionality to automate the generation of anomalous operation
+
+# Update 15/12/2019
+
+I have done a number of things since the last update:
+
+1. The 'clean' data generator works and has been tested
+2. the 'outage' data generator is complete and randomly assigns 0kW values to the data. Then the function tests each day to ensure there is at least one 0kW value per day, if there is no a 0kW value is randomly added to the day.
+3. The data was used to train a logistic regression model that turned out good results, however I did not train the model with enough outage data and the data didn't account for outages at every time period of the day. I fixed this issue by creating much more outage data to train the model, ensuring that each time period would be represented.
+4. The command line arguments are working, as well as the plot and print command line arguments.
+5. I added some basic unittests, but will expand on these in the near future.
