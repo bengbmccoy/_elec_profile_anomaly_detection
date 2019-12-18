@@ -37,6 +37,17 @@ To generate the "regular" regular I will use a vanilla base profile and then use
 
 To generate the anomalous profiles I will do each of these by hand and will create several dozen profiles. These will be combined into the cross validation and testing data sets, but not into the training dataset.
 
+Example command line uasge:
+
+to generate 7000 days of clean data:
+python .\gen_data.py .\example_data.csv -data_type clean -new_filename clean.csv -pr -days_gen 7000
+
+to generate 7000 days of outage data:
+python .\gen_data.py .\20191201_OpenNEM.csv -data_type outage -new_filename outage.csv -pr -days_gen 7000
+
+to run the unittest script (verbose):
+python -m unittest test_gen_data -v
+
 
 # Update 13/12/2019
 
@@ -60,3 +71,13 @@ I have done a number of things since the last update:
 3. The data was used to train a logistic regression model that turned out good results, however I did not train the model with enough outage data and the data didn't account for outages at every time period of the day. I fixed this issue by creating much more outage data to train the model, ensuring that each time period would be represented.
 4. The command line arguments are working, as well as the plot and print command line arguments.
 5. I added some basic unittests, but will expand on these in the near future.
+
+# Update 18/12/2019
+
+I ran 500 days of clean data and 500 days of outage data through the logistic regression classifier and then 5 days of outage data to see if the model could learn to classify outages. It could not. However, I determined that it was becuase the data I was generating was different to the data that I was test and expecting to detect an outage.
+
+The training data had an outage rate of approximately 20% (of all data points, not on 20% of days) which was far higher than the 4% outage rate that I was using to test the data. I reworked the script to include only one outage per day for the training data. When I tested the new data on the logistic regression classifier it worked with 5 out of 5 testing data sets.
+
+I understand that this is just a simple test and more testing data would be required. However I was pleased to have seen where there was an issue and have ammened the code to include a more reasonable outage rate of roughly 8% (2 outages per day).
+
+I ran a second test of the model, but this time using 15000 training examples (50/50 outage/clean) and managed to get an even better result than the test above!

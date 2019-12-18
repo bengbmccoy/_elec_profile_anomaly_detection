@@ -42,9 +42,6 @@ def main():
 
     # generate all of the new data
     gen_data = gen_new_data(data_type, val_dict, avg_val_dict, sd_val_dict, days_to_gen)
-    print(0 in gen_data.loc[0].tolist()[:-1])
-    print(gen_data.loc[0].tolist()[:-1])
-    print('############')
 
     if args.print:
         print(gen_data)
@@ -69,7 +66,7 @@ def gen_new_data(data_type, val_dict, avg_val_dict, sd_val_dict, days_to_gen):
         for i in range(days_to_gen):
             new_data = {}
             for key, value in val_dict.items():
-                if random.randint(0,10) < 2:
+                if random.randint(0,100) < 5:
                     new_data[key] = 0
                 else:
                     new_data[key] = float(avg_val_dict[key]) + (float(sd_val_dict[key]) * random.uniform(-1,1))
@@ -125,7 +122,7 @@ def get_empty_val_dict(test_data):
     return sd_dict
 
 def save_csv(df, file_name):
-    df.to_csv(file_name)
+    df.to_csv(file_name, index=False)
 
 def open_csv(file_name):
     # opens the dataframe with the index columns as the first column and the
