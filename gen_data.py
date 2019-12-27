@@ -62,6 +62,14 @@ def gen_new_data(data_type, val_dict, avg_val_dict, sd_val_dict, days_to_gen):
     # create the new pandas whcih will comtain generated data
     gen_data = pd.DataFrame(columns=list(val_dict.keys()))
 
+    # Generate noisy data with no outages
+    if data_type == 'clean':
+        for i in range(days_to_gen):
+            new_data = {}
+            for key, value in val_dict.items():
+                new_data[key] = float(avg_val_dict[key]) + (float(sd_val_dict[key]) * random.uniform(-1,1))
+            gen_data = gen_data.append(new_data, ignore_index=True)
+
     # Randomly add 0kW values to the data, or generate noisy data using the
     # average and standard deviation.
     if data_type == 'outage':
@@ -73,24 +81,27 @@ def gen_new_data(data_type, val_dict, avg_val_dict, sd_val_dict, days_to_gen):
                 else:
                     new_data[key] = float(avg_val_dict[key]) + (float(sd_val_dict[key]) * random.uniform(-1,1))
             gen_data = gen_data.append(new_data, ignore_index=True)
-
         # Ensure every day has at least one 0kW value
         for i in range(len(gen_data)):
             if 0 not in (gen_data.loc[i,:].values.tolist()):
                 gen_data.iloc[i,random.randint(0,len(gen_data.loc[i,:].values.tolist())-1)] = 0
 
-    # Generate noisy data with no outages
-    if data_type == 'clean':
+    if data_type == 'demand_spike':
         for i in range(days_to_gen):
             new_data = {}
             for key, value in val_dict.items():
                 new_data[key] = float(avg_val_dict[key]) + (float(sd_val_dict[key]) * random.uniform(-1,1))
             gen_data = gen_data.append(new_data, ignore_index=True)
+        for i in range(len(gen_data)):
+            for j in range(random.randint(1,4)):
+                gen_data.iloc[i,random.randint(0,len(gen_data.loc[i,:].values.tolist())-1)] = (float(avg_val_dict[key]) * random.uniform(2,5)) + (float(sd_val_dict[key]) * random.uniform(-1,1))
 
     if data_type == 'clean':
         gen_data['class'] = 'clean'
     elif data_type == 'outage':
         gen_data['class'] = 'outage'
+    elif data_type == 'demand_spike':
+        gen_data['class'] = 'demand_spike'
     return gen_data
 
 def get_sd_val_dict(sd_dict):
