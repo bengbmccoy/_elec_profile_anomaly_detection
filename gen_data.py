@@ -1,4 +1,16 @@
-# hello_world
+'''
+Written by Ben McCoy, Dec 2019
+
+This code takes sample data and from it generates additional data that is
+either clean (matches the example data with added noise), outages (has at least
+one 0kW reading per day of data) or demand spike (has at least one major demand
+spike per day that is at least double regular consumptioin).
+
+Example command line uasge:
+
+to generate 7000 days of clean data:
+python gen_data.py example_data.csv -data_type clean -new_filename clean.csv -pr -days_gen 7000
+'''
 
 import pandas as pd
 import matplotlib.pyplot as plt
