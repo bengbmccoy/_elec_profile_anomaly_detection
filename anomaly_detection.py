@@ -10,6 +10,7 @@ anomalous.
 
 import argparse
 import pandas as pd
+import statistics
 
 def main():
 
@@ -21,24 +22,15 @@ def main():
 
     learning_data = get_data(args.learning_data)
     feature_df_labels = (list(learning_data.columns))
+    feature_df_labels.pop()
 
-    list_dict = {}
+    feature_df = pd.DataFrame(index=feature_df_labels, columns=['mean', 'SD'])
 
     for column in feature_df_labels:
-        list_dict[column] = []
+        feature_df.loc[column, 'mean'] = learning_data[column].mean()
+        feature_df.loc[column, 'SD'] = statistics.stdev(learning_data[column])
 
-    for index, row in learning_data.iterrows():
-        for column in feature_df_labels:
-            list_dict[column].append(row[column])
-
-    mean_dict = {}
-    for item in list_dict:
-        try:
-            mean_dict[item] = sum(list_dict[item])/len(list_dict[item])
-        except:
-            print(list_dict[item])
-
-    print(mean_dict)
+    print(feature_df)
 
 def get_data(filename):
     return pd.read_csv(filename)
