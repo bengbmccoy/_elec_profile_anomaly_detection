@@ -24,46 +24,41 @@ def main():
 
     training_data = get_data(args.learning_data)
     print('learning data collected')
-    # print(training_data)
+    print(training_data)
 
     scaled_training_data = scale_features(training_data)
     print('training data scaled')
-    # print(scaled_training_data)
+    print(scaled_training_data)
 
-    learning_df, cv_df = process_training_data(scaled_training_data)
+    learning_df, cv_df, test_df = process_training_data(scaled_training_data)
     print('learning and CV data sets organised')
-    # print(learning_df)
-    # print(cv_df)
+    print(learning_df)
+    print(cv_df)
+    print(test_df)
 
     feature_df = fill_feature_df(learning_df)
     print('feature df created and filled')
-    # print(feature_df)
+    print(feature_df)
 
-    learn_epsillon(feature_df, cv_df)
+    eps_min = learn_epsillon(feature_df, learning_df)
+    print('minimum episllon found in training set')
+    print(eps_min)
 
 def get_data(filename):
     return pd.read_csv(filename)
 
 def learn_epsillon(feature_df, cv_df):
     feature_df_labels = (list(feature_df.index))
-    print(feature_df_labels)
-    eps = 0
+    eps_min = math.inf
 
     for index, row in cv_df.iterrows():
-        print(index)
         eps_curr = 1
         for item in feature_df_labels:
-
-            # print(row[item])
-            # print(feature_df.loc[item, 'mean'])
-            # print(feature_df.loc[item, 'SD'])
-
-            # print((-(((row[item]-feature_df.loc[item, 'mean'])**2)/(2*feature_df.loc[item, 'SD']))))
-
             eps_curr = eps_curr * ((1/((math.sqrt(2*math.pi))*math.sqrt(feature_df.loc[item,'SD'])))*(math.exp(-((row[item]-feature_df.loc[item,'mean'])**2)/(2*(feature_df.loc[item,'SD'])))))
-            # print((1/((math.sqrt(2*math.pi))*math.sqrt(feature_df.loc[item,'SD'])))*(math.exp(-((row[item]-feature_df.loc[item,'mean'])**2)/(2*(feature_df.loc[item,'SD'])))))
+        if eps_curr < eps_min:
+            eps_min = eps_curr
 
-        print(eps_curr)
+    return eps_min
 
 def scale_features(training_data):
     '''scales features using the min-max method, drops the class column for
@@ -94,18 +89,24 @@ def process_training_data(scaled_training_data):
     feature_df_labels = (list(scaled_training_data.columns))
     learning_df = pd.DataFrame(columns=feature_df_labels)
     cv_df = pd.DataFrame(columns=feature_df_labels)
+    test_df = pd.DataFrame(columns=feature_df_labels)
 
     for i in range(len(scaled_training_data)):
         if scaled_training_data.loc[i, 'class'] == 'clean':
             scaled_training_data.loc[i, 'class'] = '0'
+            learning_df = learning_df.append(scaled_training_data.loc[i], ignore_index=True)
         else:
             scaled_training_data.loc[i, 'class'] = '1'
-        if i % 5 == 0:
-            cv_df = cv_df.append(scaled_training_data.loc[i], ignore_index=True)
-        else:
-            learning_df = learning_df.append(scaled_training_data.loc[i], ignore_index=True)
+            if i % 2 == 0:
+                cv_df = cv_df.append(scaled_training_data.loc[i], ignore_index=True)
+            else:
+                test_df = test_df.append(scaled_training_data.loc[i], ignore_index=True)
+        # if i % 5 == 0:
+        #     cv_df = cv_df.append(scaled_training_data.loc[i], ignore_index=True)
+        # else:
+        #     learning_df = learning_df.append(scaled_training_data.loc[i], ignore_index=True)
 
-    return learning_df, cv_df
+    return learning_df, cv_df, test_df
 
 if __name__ == "__main__":
     main()
