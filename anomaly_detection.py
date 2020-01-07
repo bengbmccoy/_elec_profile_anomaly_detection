@@ -12,6 +12,7 @@ import argparse
 import pandas as pd
 import statistics
 import math
+from sklearn.model_selection import train_test_split
 
 def main():
 
@@ -24,34 +25,54 @@ def main():
 
     training_data = get_data(args.learning_data)
     print('learning data collected')
-    print(training_data)
+    # print(training_data)
 
     scaled_training_data = scale_features(training_data)
     print('training data scaled')
-    print(scaled_training_data)
+    # print(scaled_training_data)
 
     learning_df, cv_df, test_df = process_training_data(scaled_training_data)
     print('learning and CV data sets organised')
-    print(learning_df)
-    print(cv_df)
-    print(test_df)
+    # print(learning_df)
+    # print(cv_df)
+    # print(test_df)
 
     feature_df = fill_feature_df(learning_df)
     print('feature df created and filled')
-    print(feature_df)
+    # print(feature_df)
 
     eps_min = learn_epsillon(feature_df, learning_df)
     print('minimum episllon found in training set')
-    print(eps_min)
+    # print(eps_min)
+
+    validate_epsillon(eps_min, feature_df, test_df)
 
 def get_data(filename):
     return pd.read_csv(filename)
 
-def learn_epsillon(feature_df, cv_df):
+def validate_epsillon(eps_min, feature_df, cv_df):
+
+    feature_df_labels = (list(feature_df.index))
+    incorrect_df = pd.DataFrame(columns=feature_df_labels)
+
+    for index, row in cv_df.iterrows():
+        eps_curr = 1
+        expected_result = row['class']
+        for item in feature_df_labels:
+            eps_curr = eps_curr * ((1/((math.sqrt(2*math.pi))*math.sqrt(feature_df.loc[item,'SD'])))*(math.exp(-((row[item]-feature_df.loc[item,'mean'])**2)/(2*(feature_df.loc[item,'SD'])))))
+        # print(eps_curr)
+        if eps_curr < eps_min and expected_result == '1':
+            print('no issues')
+        elif eps_curr >= eps_min and expected_result == '0':
+            print('no issues')
+        else:
+            print('issues')
+
+def learn_epsillon(feature_df, df):
     feature_df_labels = (list(feature_df.index))
     eps_min = math.inf
 
-    for index, row in cv_df.iterrows():
+    for index, row in df.iterrows():
         eps_curr = 1
         for item in feature_df_labels:
             eps_curr = eps_curr * ((1/((math.sqrt(2*math.pi))*math.sqrt(feature_df.loc[item,'SD'])))*(math.exp(-((row[item]-feature_df.loc[item,'mean'])**2)/(2*(feature_df.loc[item,'SD'])))))
@@ -88,23 +109,22 @@ def process_training_data(scaled_training_data):
     '''
     feature_df_labels = (list(scaled_training_data.columns))
     learning_df = pd.DataFrame(columns=feature_df_labels)
-    cv_df = pd.DataFrame(columns=feature_df_labels)
-    test_df = pd.DataFrame(columns=feature_df_labels)
+    anomalous_df = pd.DataFrame(columns=feature_df_labels)
+    non_anomalous_df = pd.DataFrame(columns=feature_df_labels)
 
     for i in range(len(scaled_training_data)):
         if scaled_training_data.loc[i, 'class'] == 'clean':
             scaled_training_data.loc[i, 'class'] = '0'
-            learning_df = learning_df.append(scaled_training_data.loc[i], ignore_index=True)
+            non_anomalous_df = non_anomalous_df.append(scaled_training_data.loc[i], ignore_index=True)
         else:
             scaled_training_data.loc[i, 'class'] = '1'
-            if i % 2 == 0:
-                cv_df = cv_df.append(scaled_training_data.loc[i], ignore_index=True)
-            else:
-                test_df = test_df.append(scaled_training_data.loc[i], ignore_index=True)
-        # if i % 5 == 0:
-        #     cv_df = cv_df.append(scaled_training_data.loc[i], ignore_index=True)
-        # else:
-        #     learning_df = learning_df.append(scaled_training_data.loc[i], ignore_index=True)
+            anomalous_df = anomalous_df.append(scaled_training_data.loc[i], ignore_index=True)
+
+    cv_df, test_df = train_test_split(anomalous_df, test_size=0.5)
+    learning_df, temp_df = train_test_split(non_anomalous_df, test_size=0.2)
+    temp_cv_df, temp_test_df = train_test_split(temp_df, test_size=0.5)
+    cv_df = cv_df.append(temp_cv_df, ignore_index=True)
+    test_df = test_df.append(temp_test_df, ignore_index=True)
 
     return learning_df, cv_df, test_df
 
