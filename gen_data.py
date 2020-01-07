@@ -54,6 +54,8 @@ def main():
 
     # generate all of the new data
     gen_data = gen_new_data(data_type, val_dict, avg_val_dict, sd_val_dict, days_to_gen)
+    gen_data.mean().plot()
+    plt.show()
 
     if args.print:
         print(gen_data)
