@@ -13,6 +13,7 @@ python gen_data.py example_data.csv -data_type clean -new_filename clean.csv -pr
 '''
 
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import random
 import statistics
@@ -38,34 +39,66 @@ def main():
     args = parser.parse_args()
 
     test_data = open_csv(args.example_data)
-    # print(test_data)
+    test_data['ID'] = test_data['ProfileName'] + test_data['ProfileArea']
+    id_list = set(test_data['ID'].tolist())
+    columns = test_data.columns
+    good_cols = []
+
+    for col in columns:
+        if str(col[0:4]) == 'Peri' or str(col) == 'ID' or str(col) == 'SettlementDate':
+            good_cols.append(col)
+
+    drop_cols = list(set(columns) - set(good_cols))
+    for col in drop_cols:
+        test_data.drop(col, axis=1, inplace=True)
+
+    df_dict = {}
+    for id in id_list:
+        df_dict[id] = test_data[test_data['ID'] == id]
+    # print(df_dict)
+
+    test_data = df_dict['CLOADNSWCECOUNTRYENERGY']
+
+    avg_dict, sd_dict = get_val_dict(test_data)
 
     # parse number of days to generate
     days_to_gen = args.days_gen
     data_type = args.data_type
 
-    # Sum the data into a total column
-    test_data['Total - MW'] = test_data.sum(axis=1)
+    gen_data = gen_aemo_data(avg_dict, sd_dict, days_to_gen)
 
-    val_dict = get_empty_val_dict(test_data)
-    val_dict = fill_val_dict(test_data, val_dict)
-    avg_val_dict = get_avg_val_dict(val_dict)
-    sd_val_dict = get_sd_val_dict(val_dict)
 
-    # generate all of the new data
-    gen_data = gen_new_data(data_type, val_dict, avg_val_dict, sd_val_dict, days_to_gen)
-    gen_data.mean().plot()
-    plt.show()
+    # # Sum the data into a total column
+    # test_data['Total - MW'] = test_data.sum(axis=1)
+    #
+    # val_dict = get_empty_val_dict(test_data)
+    # val_dict = fill_val_dict(test_data, val_dict)
+    # avg_val_dict = get_avg_val_dict(val_dict)
+    # sd_val_dict = get_sd_val_dict(val_dict)
+    #
+    # # generate all of the new data
+    # gen_data = gen_new_data(data_type, val_dict, avg_val_dict, sd_val_dict, days_to_gen)
+    # gen_data.mean().plot()
+    # plt.show()
 
     if args.print:
         print(gen_data)
 
     if args.plot:
-        gen_data.T.plot()
+        # gen_data.T.plot()
+        gen_data.mean().plot()
         plt.show()
 
     # Save CSV
     save_csv(gen_data, args.new_filename)
+
+def gen_aemo_data(avg_dict, sd_dict, days_to_gen):
+
+    new_data_df = pd.DataFrame(columns=list(avg_dict.keys()))
+    for column in list(avg_dict.keys()):
+        new_data_df[column] = np.random.normal(avg_dict[column], sd_dict[column], days_to_gen)
+    new_data_df['class'] = 'clean'
+    return new_data_df
 
 def gen_new_data(data_type, val_dict, avg_val_dict, sd_val_dict, days_to_gen):
     # creates new data based on the avg and std dev of a time period and then
@@ -138,6 +171,18 @@ def fill_val_dict(test_data, val_dict):
         val_dict[str(index)[11:16]].append(row['Total - MW'])
     return val_dict
 
+def get_val_dict(test_data):
+    # Get dict of mean values of time periods and stdev of time periods, data
+    # to be extraceted is from aemo profile data
+
+    sd_dict = {}
+    avg_dict = {}
+    for period in list(test_data.drop(columns=['SettlementDate', 'ID']).columns):
+        avg_dict[str(period)[-2:]] = test_data[period].mean()
+        sd_dict[str(period)[-2:]] = statistics.stdev(test_data[period])
+
+    return avg_dict, sd_dict
+
 def get_empty_val_dict(test_data):
     # get a dictionary of empty lists, the key of each list is a time period
     sd_dict = {}
@@ -155,7 +200,7 @@ def save_csv(df, file_name):
 def open_csv(file_name):
     # opens the dataframe with the index columns as the first column and the
     # values parsed as dates
-    return pd.read_csv(file_name, index_col=0, parse_dates=True)
+    return pd.read_csv(file_name, parse_dates=True)
 
 if __name__ == "__main__":
     main()

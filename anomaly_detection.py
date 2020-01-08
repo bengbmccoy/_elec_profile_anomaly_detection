@@ -13,7 +13,9 @@ import pandas as pd
 import statistics
 import math
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+
 
 def main():
 
@@ -43,9 +45,11 @@ def main():
 
     feature_df = fill_feature_df(learning_df)
     print('feature df created and filled')
-    feature_df.plot()
+    feature_df['mean+sd'] = feature_df['mean'] + feature_df['SD']
+    feature_df['mean-sd'] = feature_df['mean'] - feature_df['SD']
+    # feature_df.plot()
     # plt.show()
-    print(feature_df)
+    # print(feature_df)
 
     eps_min = learn_epsillon(feature_df, learning_df)
     print('minimum episllon found in training set of ', eps_min)
@@ -61,12 +65,12 @@ def main():
         incorrect_eps.plot()
     plt.show()
 
-
-
     if len(incorrect_anom) > 0:
         print('###### WARNING ######')
         print('The following anomalies were not detected by epsillon')
         print(incorrect_anom)
+        incorrect_anom.drop(columns=['class', 'old_eps', 'new_eps'], inplace=True).T
+        incorrect_anom.plot()
 
 def get_data(filename):
     return pd.read_csv(filename)
@@ -88,8 +92,9 @@ def validate_epsillon(eps_min, feature_df, cv_df):
         # If a lower eps value is found, it is updated and the row and old value stored
         if eps < eps_min:
             incorrect_eps = incorrect_eps.append(non_anom_df.loc[index, :], ignore_index=True)
-            incorrect_eps['old_eps'] = eps_min
-            incorrect_eps['new_eps'] = eps
+            # incorrect_eps.iloc[-1, incorrect_eps.columns.get_loc('old_eps')] = eps_min
+            # incorrect_eps['old_eps'] = eps_min
+            # incorrect_eps['new_eps'] = eps
             eps_min = eps
 
     # iterate through anomalous CV data
@@ -99,7 +104,7 @@ def validate_epsillon(eps_min, feature_df, cv_df):
             eps = eps * ((1/((math.sqrt(2*math.pi))*math.sqrt(feature_df.loc[label,'SD'])))*(math.exp(-((row[label]-feature_df.loc[label,'mean'])**2)/(2*(feature_df.loc[label,'SD'])))))
         # If an anopmaly slips through eps, the row is stored and a message is printed
         if eps > eps_min:
-            incorrect_anom = incorrect_df.append(anom_df.loc[index, :], ignore_index=True)
+            incorrect_anom = incorrect_anom.append(anom_df.loc[index, :], ignore_index=True)
             print('an eps value of ', eps, ' was found for anomalous data, the current eps_min value is ', eps_min)
 
     return eps_min, incorrect_eps, incorrect_anom
@@ -119,16 +124,17 @@ def learn_epsillon(feature_df, df):
 
 def scale_features(training_data):
     '''scales features using the min-max method, drops the class column for
-    convenience'''
+    convenience then picks it up again'''
 
     scaled_training_data = training_data.drop('class', 1)
-    scaled_training_data = scaled_training_data - scaled_training_data.min()
-    scaled_training_data = scaled_training_data / scaled_training_data.max()
+    scaler = StandardScaler()
+    scaled_training_data = pd.DataFrame(scaler.fit_transform(scaled_training_data), columns=scaled_training_data.columns)
+    print(scaler)
     scaled_training_data['class'] = training_data['class'].values
     return scaled_training_data
 
 def fill_feature_df(learning_df):
-    learning_df.mean().plot()
+    # learning_df.mean().plot()
     feature_df_labels = (list(learning_df.columns))
     feature_df_labels.pop()
 
